@@ -1,7 +1,18 @@
 import os
 import discord
+import hashlib
+
+from dotenv import load_dotenv, find_dotenv
+
+load_dotenv(find_dotenv())
 
 client = discord.Client()
+
+def encrypt_string(str):
+    encoded = str.encoded()
+    result = hashlib.sha256(encoded)
+
+    return result.digest()
 
 @client.event
 async def on_ready():
@@ -15,4 +26,4 @@ async def on_message(message):
     if message.content.startswith('$hello'):
         await message.channel.send('Hello!')
 
-client.run(os.environ.get('secret-key'))
+client.run(os.environ.get('SECRET_KEY'))
