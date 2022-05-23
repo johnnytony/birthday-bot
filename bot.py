@@ -177,7 +177,8 @@ async def test():
                         description=f"Today our comrades `{usernames}` accomplish `{years} years old`!\nWe wish them a wonderful day!",
                         color=0xFF5733)
 
-        embed.set_image(url="https://i.redd.it/5lbchzbtl8331.png")
+    embed.set_image(url="https://i.redd.it/5lbchzbtl8331.png")
+    
     await channel.send('@everyone')
     await channel.send(embed=embed)
 
