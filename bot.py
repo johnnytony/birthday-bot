@@ -56,15 +56,13 @@ async def on_message(message):
                              description="Here's a list of our fellow comrades birthday!",
                              color=0xFF5733)
 
+
         for i, user_birth in enumerate(data):
             user = await client.fetch_user(int(user_birth['id']))
             date = datetime.datetime.strptime(user_birth['birthday'],'%Y-%m-%d')
 
-            if i % 2 == 0 and i > 0:
-                embed.add_field(name='\u200b', value='\u200b')
-                embed.add_field(name=user.display_name, value=date.strftime("%d %B, %Y"), inline=True)
-            else:
-                embed.add_field(name=user.display_name, value=date.strftime("%d %B, %Y"), inline=True)
+            embed.add_field(name=user.display_name, value=date.strftime("%d %B, %Y"), inline=False)
+            
         await message.channel.send(embed=embed)
 
 
