@@ -1,6 +1,8 @@
-from re import S
+from re import U
 import requests
 import discord
+
+from discord import Guild
 
 import json
 import datetime
@@ -12,7 +14,10 @@ import configs
 base_url = configs.BASE_URL
 headers = {'Content-Type': 'application/json', 'API-Key':configs.API_KEY}
 
-client = discord.Client()
+intents = discord.Intents.default()
+intents.members = True
+
+client = discord.Client(intents=intents)
 
 @client.event
 async def on_ready():
@@ -56,12 +61,18 @@ async def on_message(message):
                              description="Here's a list of our fellow comrades birthday!",
                              color=0xFF5733)
 
-
         for i, user_birth in enumerate(data):
-            user = await client.fetch_user(int(user_birth['id']))
+            guild = client.get_guild(message.guild.id)
+            member = guild.get_member(int(user_birth['id']))
+            username = member.nick
+
+            if not username:
+                user = await client.fetch_user(int(user_birth['id']))
+                username = user.display_name
+        
             date = datetime.datetime.strptime(user_birth['birthday'],'%Y-%m-%d')
 
-            embed.add_field(name=user.display_name, value=date.strftime("%d %B, %Y"), inline=False)
+            embed.add_field(name=username, value=date.strftime("%d %B, %Y"), inline=False)
             
         await message.channel.send(embed=embed)
 
@@ -111,33 +122,32 @@ async def on_message(message):
 
         data = r.json()
         
-        if len(data) == 1:
-            user = await client.fetch_user(int(data[0]['id']))
-            date = datetime.datetime.strptime(data[0]['birthday'],'%Y-%m-%d')
-            years = datetime.date.today().year - date.year
+        guild = client.get_guild(message.guild.id)
 
-            embed = discord.Embed(title=f'Happy Birthday {user.display_name}!',
-                            description=f"Today our comrade `{user.display_name}` accomplish `{years} years old`!\nWe wish him/her a wonderful day!",
-                            color=0xFF5733)
+        users_info = []
 
-        else:
-            users_data = [await client.fetch_user(int(user_data['id'])) for user_data in data]
-            users_names = [user.display_name for user in users_data]
-            
-            date = datetime.datetime.strptime(data[0]['birthday'],'%Y-%m-%d')
-            years = datetime.date.today().year - date.year
+        for user in data:
+            member = guild.get_member(int(user['id']))
+            username = member.nick
 
-            joined_usernames = " and ".join(users_names)
-            usernames = joined_usernames.replace(" and ", ", ", len(users_data) - 2)
+            if not username:
+                u = await client.fetch_user(int(user['id']))
+                username = u.display_name
 
-            embed = discord.Embed(title=f'Happy Birthday {usernames}!',
-                            description=f"Today our comrades `{usernames}` accomplish `{years} years old`!\nWe wish them a wonderful day!",
-                            color=0xFF5733)
+            date = datetime.datetime.strptime(user['birthday'],'%Y-%m-%d')
+            years = str(datetime.date.today().year - date.year)
 
-        embed.set_image(url="https://i.redd.it/5lbchzbtl8331.png")
+            users_info.append({'username': username, 'years': years})
 
         await message.channel.send('@everyone')
-        await message.channel.send(embed=embed)
+
+        for user_info in users_info:
+            embed = discord.Embed(title=f'Happy Birthday {user_info["username"]}!',
+                            description=f'Today our comrade `{user_info["username"]}` accomplish `{user_info["years"]} years old`!\nWe wish him/her a wonderful day!',
+                            color=0xFF5733)
+
+            embed.set_image(url="https://i.redd.it/5lbchzbtl8331.png")
+            await message.channel.send(embed=embed)
 
 
 @tasks.loop(hours=24)
@@ -153,34 +163,35 @@ async def test():
         return
 
     data = r.json()
-    
-    if len(data) == 1:
-        user = await client.fetch_user(int(data[0]['id']))
-        date = datetime.datetime.strptime(data[0]['birthday'],'%Y-%m-%d')
-        years = datetime.date.today().year - date.year
 
-        embed = discord.Embed(title=f'Happy Birthday {user.display_name}!',
-                        description=f"Today our comrade `{user.display_name}` accomplish `{years} years old`!\nWe wish him/her a wonderful day!",
-                        color=0xFF5733)
+    guild = client.get_guild(int(configs.SERVER_ID))
 
-    else:
-        users_data = [await client.fetch_user(int(user_data['id'])) for user_data in data]
-        users_names = [user.display_name for user in users_data]
-        
-        date = datetime.datetime.strptime(data[0]['birthday'],'%Y-%m-%d')
-        years = datetime.date.today().year - date.year
+    users_info = []
 
-        joined_usernames = " and ".join(users_names)
-        usernames = joined_usernames.replace(" and ", ", ", len(users_data) - 2)
+    for user in data:
+        member = guild.get_member(int(user['id']))
+        username = member.nick
 
-        embed = discord.Embed(title=f'Happy Birthday {usernames}!',
-                        description=f"Today our comrades `{usernames}` accomplish `{years} years old`!\nWe wish them a wonderful day!",
-                        color=0xFF5733)
+        if not username:
+            u = await client.fetch_user(int(user['id']))
+            username = u.display_name
 
-    embed.set_image(url="https://i.redd.it/5lbchzbtl8331.png")
+        date = datetime.datetime.strptime(user['birthday'],'%Y-%m-%d')
+        years = str(datetime.date.today().year - date.year)
+
+        users_info.append({'username': username, 'years': years})
 
     await channel.send('@everyone')
-    await channel.send(embed=embed)
+
+    for user_info in users_info:
+        embed = discord.Embed(title=f'Happy Birthday {user_info["username"]}!',
+                        description=f'Today our comrade `{user_info["username"]}` accomplish `{user_info["years"]} years old`!\nWe wish him/her a wonderful day!',
+                        color=0xFF5733)
+
+        embed.set_image(url="https://i.redd.it/5lbchzbtl8331.png")
+        await channel.send(embed=embed)
+
+    
 
 
 
