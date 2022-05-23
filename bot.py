@@ -143,7 +143,7 @@ async def on_message(message):
 
 @tasks.loop(hours=24)
 async def test():
-    channel = client.get_channel(int(configs.CHANNEL_ID))
+    channel = client.get_channel(configs.CHANNEL_ID)
 
     url = base_url + '/check_birthdays'
 
