@@ -137,14 +137,15 @@ async def on_message(message):
                             color=0xFF5733)
 
         embed.set_image(url="https://i.redd.it/5lbchzbtl8331.png")
-        
+
         await message.channel.send('@everyone')
         await message.channel.send(embed=embed)
 
 
 @tasks.loop(hours=24)
 async def test():
-    channel = client.get_channel(configs.CHANNEL_ID)
+    print
+    channel = client.get_channel(int(configs.CHANNEL_ID))
 
     url = base_url + '/check_birthdays'
 
