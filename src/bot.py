@@ -9,7 +9,7 @@ import datetime
 
 from discord.ext import tasks
 
-import configs
+import src.configs as configs
 
 base_url = configs.BASE_URL
 headers = {'Content-Type': 'application/json', 'API-Key':configs.API_KEY}
@@ -148,57 +148,5 @@ async def on_message(message):
 
             embed.set_image(url="https://i.redd.it/5lbchzbtl8331.png")
             await message.channel.send(embed=embed)
-
-
-@tasks.loop(hours=24)
-async def test():
-    print
-    channel = client.get_channel(int(configs.CHANNEL_ID))
-
-    url = base_url + '/check_birthdays'
-
-    r = requests.get(url, headers=headers)
-
-    if r.status_code == 404:
-        return
-
-    data = r.json()
-
-    guild = client.get_guild(int(configs.SERVER_ID))
-
-    users_info = []
-
-    for user in data:
-        member = guild.get_member(int(user['id']))
-        username = member.nick
-
-        if not username:
-            u = await client.fetch_user(int(user['id']))
-            username = u.display_name
-
-        date = datetime.datetime.strptime(user['birthday'],'%Y-%m-%d')
-        years = str(datetime.date.today().year - date.year)
-
-        users_info.append({'username': username, 'years': years})
-
-    await channel.send('@everyone')
-
-    for user_info in users_info:
-        embed = discord.Embed(title=f'Happy Birthday {user_info["username"]}!',
-                        description=f'Today our comrade `{user_info["username"]}` accomplish `{user_info["years"]} years old`!\nWe wish him/her a wonderful day!',
-                        color=0xFF5733)
-
-        embed.set_image(url="https://i.redd.it/5lbchzbtl8331.png")
-        await channel.send(embed=embed)
-
-    
-
-
-
-
-@client.event
-async def on_ready():
-    test.start()
-    
 
 client.run(configs.CLIENT_ID)
