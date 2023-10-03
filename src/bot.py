@@ -9,7 +9,7 @@ import datetime
 
 from discord.ext import tasks
 
-import src.configs as configs
+import configs
 
 base_url = configs.BASE_URL
 headers = {'Content-Type': 'application/json', 'API-Key':configs.API_KEY}
